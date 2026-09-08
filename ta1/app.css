@@ -675,3 +675,11 @@ a.btn{text-decoration:none}
   .logo-txt span{display:none}          /* khỏi xuống 3 dòng làm thanh đầu quá cao */
   .logo-txt b{font-size:15.5px}
 }
+
+/* ---------- Dải báo đang tải bộ giọng đọc thu sẵn ---------- */
+.audioload{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(74px + env(safe-area-inset-bottom));
+  z-index:150;background:var(--navy);color:#fff;font-size:12.5px;font-weight:800;
+  padding:9px 16px;border-radius:14px;box-shadow:0 8px 24px rgba(12,22,58,.32);
+  max-width:90vw;text-align:center;pointer-events:none}
+.audioload.hide{display:none}
+@media print{ .audioload{display:none!important} }

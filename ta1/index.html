@@ -255,6 +255,7 @@
       </div>
       <div class="field">
         <label>Giọng đọc tiếng Anh</label>
+        <div class="mini" style="margin:-2px 0 6px">App dùng <b>giọng nữ Anh–Anh thu sẵn</b> cho mọi bài. Ô dưới đây chỉ dùng khi máy chưa tải được bộ thu sẵn.</div>
         <select id="setVoice"></select>
         <button class="btn ghost wide" id="testVoice" style="margin-top:9px">🔊 Nghe thử giọng đọc</button>
         <div class="note" id="voiceNote" style="margin-top:9px;display:none"></div>
@@ -327,7 +328,7 @@
       Android — bấm dấu <b>⋮</b> góc trên bên phải → <b>Thêm vào màn hình chính</b>.</span><br>
       Từ đó con chạm vào biểu tượng Hướng Nghiệp Alpha là vào học ngay, trông y như một ứng dụng thật.</li>
   <li><b>Đăng ký một lần duy nhất.</b> Lần đầu mở app sẽ hiện màn hình đăng ký — đây là bước <b>bắt buộc</b>, điền xong con mới vào học được. Năm mục cần điền: họ và tên của bé, số điện thoại của mẹ, email, lớp, khu vực. Điền một lần rồi thôi, những lần sau app tự nhớ.</li>
-  <li><b>Bật loa hoặc cắm tai nghe.</b> App dùng giọng đọc sẵn có của máy, không phải tải thêm gì.</li>
+  <li><b>Bật loa hoặc cắm tai nghe.</b> Giọng đọc tiếng Anh <b>đã thu sẵn ngay trong app</b> — giọng chuẩn Anh–Anh, đọc chậm rõ cho bé tiểu học. Máy không cần cài thêm bộ đọc nào, cũng không phụ thuộc vào máy đọc được hay không.</li>
 </ol>
 
 <h3>Vì sao phải đăng ký mới dùng được?</h3>
@@ -351,6 +352,16 @@
 
 <div class="card">
   <b>Trình duyệt nên dùng:</b> Chrome hoặc Safari bản mới. Riêng trò <b>Luyện nói</b> cần micro và chỉ chấm điểm được trên Chrome/Edge; nếu máy không hỗ trợ, app tự chuyển sang nút “Con đã đọc xong ✓” để bố mẹ nghe và xác nhận — con vẫn luyện nói bình thường.
+</div>
+
+<div class="card warm">
+  <b>Về giọng đọc trong app.</b> Trước đây app mượn bộ đọc có sẵn của máy, nên có điện thoại nghe được, có điện thoại lại im lặng — hay gặp nhất là máy dùng bộ đọc riêng của hãng. Nay <b>toàn bộ từ, câu, bài vè và đoạn đọc hiểu đều đã được thu sẵn</b> bằng một giọng nữ Anh–Anh duy nhất và đóng gói kèm app, nên <b>máy nào cũng nghe được như nhau</b>.
+  <ul style="margin-bottom:0">
+    <li><b>Tải theo lớp của con.</b> Con học lớp nào thì chỉ tải giọng của lớp đó (khoảng 1–3 MB, vài giây). Lúc đang tải có dòng chữ “Đang tải giọng đọc cho lớp này…” hiện ở dưới màn hình.</li>
+    <li><b>Tải một lần rồi thôi.</b> Những lần sau máy dùng lại bản đã lưu, không tốn thêm dữ liệu.</li>
+    <li><b>Chưa ra tiếng thì bấm nút loa thêm một lần.</b> Trên iPhone và một số máy Android, tiếng chỉ phát sau khi con chạm vào màn hình lần đầu — đó là quy định của trình duyệt, không phải app hỏng.</li>
+    <li><b>Vẫn giữ nút “Xem chữ”.</b> Nếu vì lý do nào đó máy vẫn im, app tự hiện chữ để con làm bài tiếp — riêng trò <b>Nghe &amp; viết</b> thì không hiện, vì chữ đó chính là đáp án.</li>
+  </ul>
 </div>
 
 <h2 id="lotrinh">2. Lộ trình 15 phút mỗi ngày</h2>
@@ -532,6 +543,8 @@
     <p class="linote">Hoàn toàn tự nguyện — không ảnh hưởng đến quyền sử dụng app. Hướng Nghiệp Alpha xin cảm ơn bố mẹ đã đồng hành. 💛</p>
   </div>
 </div>
+
+<div id="audioLoad" class="audioload hide">🔊 Đang tải giọng đọc cho lớp này…</div>
 
 <div class="hna-foot">
   <a href="../" id="backHub" class="foot-back hide">← Tất cả môn học · Học Cùng Con</a>

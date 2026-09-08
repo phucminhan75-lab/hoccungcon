@@ -202,6 +202,76 @@ const SFX = {
   tick(){ tone(1200,0,.03,"square",.04); }
 };
 
+/* =====================================================================
+   BỘ ÂM THANH THU SẴN
+   Giọng nữ Anh–Anh, đọc chậm hơn 15%, thu bằng máy rồi nhúng vào app.
+   Nhờ vậy MỌI máy đều nghe được, kể cả máy dùng bộ đọc Samsung hay
+   máy chưa cài gói giọng tiếng Anh — đó là lỗi hay gặp nhất ở VN.
+   Giọng máy (Web Speech) chỉ còn là phương án dự phòng.
+   Mỗi lớp một gói riêng, vào lớp nào tải gói lớp đó cho nhẹ.
+   ===================================================================== */
+const akey = s => String(s||"").toLowerCase()
+  .replace(/[^a-z0-9' ]/g,"").replace(/\s+/g," ").trim();
+
+const AUDIO = {
+  map:{}, el:null, dangTai:{}, daTai:{}, seq:0,
+  load(o){ Object.assign(this.map, o); },
+  co(t){ return !!this.map[akey(t)]; },
+  el_(){
+    if(!this.el){
+      this.el = new Audio();
+      this.el.preload = "auto";
+    }
+    return this.el;
+  },
+  /* Phát một clip. Trả về true nếu có clip và đã bắt đầu phát. */
+  phat(text, rate, xong){
+    const d = this.map[akey(text)];
+    if(!d) return false;
+    const a = this.el_(), id = ++this.seq;
+    try{
+      a.pause();
+      a.onended = a.onerror = null;
+      a.src = d;
+      a.playbackRate = Math.min(2, Math.max(.5, rate || 1));
+      a.onended = ()=>{ if(id===this.seq && xong) xong(); };
+      a.onerror = ()=>{ if(id===this.seq && xong) xong(); };
+      const p = a.play();
+      if(p && p.catch) p.catch(()=>{ ttsHong(); });
+      ttsChay();
+      return true;
+    }catch(e){ return false; }
+  },
+  dung(){ try{ this.seq++; this.el && this.el.pause(); }catch(e){} },
+  /* Tải gói của một lớp. Gọi nhiều lần cũng chỉ tải một lần. */
+  tai(goi, xong){
+    goi = String(goi);
+    if(this.daTai[goi]){ xong && xong(true); return; }
+    if(this.dangTai[goi]){ this.dangTai[goi].push(xong); return; }
+    this.dangTai[goi] = [xong];
+    const s = document.createElement("script");
+    s.src = "au-" + goi + ".js";
+    s.async = true;
+    const bao = ok => {
+      this.daTai[goi] = ok;
+      (this.dangTai[goi]||[]).forEach(f=>f&&f(ok));
+      delete this.dangTai[goi];
+      capNhatTaiGiong();
+    };
+    s.onload  = ()=>bao(true);
+    s.onerror = ()=>bao(false);
+    document.head.appendChild(s);
+    capNhatTaiGiong();
+  },
+  dangBan(){ return Object.keys(this.dangTai).length > 0; }
+};
+
+/* Dải báo "đang tải giọng đọc" — chỉ hiện khi thật sự đang tải */
+function capNhatTaiGiong(){
+  const el = $("#audioLoad");
+  if(el) el.classList.toggle("hide", !AUDIO.dangBan());
+}
+
 /* ---------- giọng đọc ---------- */
 let VOICES=[];
 function loadVoices(){
@@ -236,23 +306,31 @@ function ttsChay(){
   document.body.classList.remove("nosound");
 }
 
-function speak(text, rate){
-  if(!window.speechSynthesis || !S.sound || !text) return;
+function speak(text, rate, xong){
+  if(!S.sound || !text) return;
+  unlockAudio();
+
+  /* 1) Ưu tiên tuyệt đối bản thu sẵn — chạy được trên mọi máy */
+  try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
+  if(AUDIO.phat(text, (rate||.85)/.85, xong)) return;
+
+  /* 2) Không có clip (từ lạ, hoặc gói chưa tải xong) thì nhờ máy đọc */
+  if(!window.speechSynthesis) { ttsHong(); xong && xong(); return; }
+  AUDIO.dung();
   try{
-    unlockAudio();
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(String(text));
     u.lang = "en-GB"; u.rate = rate || .85; u.pitch = 1.05;
     let v = VOICES.find(x=>x.name===S.settings.voice);
     if(!v) v = VOICES.find(x=>/en-GB/i.test(x.lang)) || VOICES.find(x=>/en/i.test(x.lang));
     if(v) { u.voice=v; u.lang=v.lang; }
-    let xong = false;
-    u.onstart = ()=>{ xong=true; ttsChay(); };
-    u.onend   = ()=>{ xong=true; ttsChay(); };
+    let batDau = false;
+    u.onstart = ()=>{ batDau=true; ttsChay(); };
+    u.onend   = ()=>{ batDau=true; ttsChay(); xong && xong(); };
     u.onerror = e =>{
       const l = e && e.error;
       if(l==="interrupted" || l==="canceled") return;   // do mình chủ động dừng
-      ttsHong();
+      ttsHong(); xong && xong();
     };
     /* Android bị kẹt nếu speak() gọi ngay sau cancel() — lùi một nhịp */
     setTimeout(()=>{ try{
@@ -260,14 +338,23 @@ function speak(text, rate){
       speechSynthesis.speak(u);
     }catch(e){ ttsHong(); } }, 40);
     /* Không thấy đọc sau 1,8 giây thì coi như máy không đọc được */
-    setTimeout(()=>{ if(!xong && !speechSynthesis.speaking) ttsHong(); }, 1800);
+    setTimeout(()=>{ if(!batDau && !speechSynthesis.speaking){ ttsHong(); xong && xong(); } }, 1800);
   }catch(e){ ttsHong(); }
 }
 
-function speakSeq(list,i){
-  i=i||0; if(i>=list.length) return;
-  speak(list[i]);
-  setTimeout(()=>speakSeq(list,i+1), 1200);
+/* Đọc lần lượt nhiều từ/câu. Với bản thu sẵn thì nối tiếp ngay khi clip
+   trước kết thúc — nghe liền mạch hơn là hẹn giờ cứng. */
+let seqId = 0;
+function speakSeq(list,i,id){
+  if(i===undefined || i===0){ id = ++seqId; i = 0; }
+  if(id !== seqId) return;                 // đã có lượt đọc mới, bỏ lượt cũ
+  if(i >= list.length) return;
+  let tiep = false;
+  const sang = ()=>{ if(tiep) return; tiep = true;
+    setTimeout(()=>speakSeq(list, i+1, id), 260); };
+  speak(list[i], null, sang);
+  /* dự phòng: máy dùng giọng máy không báo kết thúc thì vẫn phải chạy tiếp */
+  setTimeout(sang, 2600);
 }
 /* ---------- pháo hoa ---------- */
 const cvs=$("#confetti"), ctx2=cvs.getContext("2d"); let parts=[], anim=null;
@@ -319,7 +406,11 @@ function renderHome(){
   });
   renderStickers();
 }
-function setGrade(g){ GRADE=g; S.grade=g; save(); buildPool(); }
+function setGrade(g){
+  GRADE=g; S.grade=g; save(); buildPool();
+  AUDIO.tai(g);          // gói của lớp
+  AUDIO.tai("ext");      // từ mở rộng dùng cho phần nâng cao
+}
 function renderStickers(){
   const EM=["🌟","🎖️","🏆","🥇","🎯","🚀","🌈","🦄","🐬","🎨","🎪","🍀","💎","🔥","👑","🧩","🎵","⚡","🌻","🐧"];
   $("#stickerBook").innerHTML = UNITS().map((u,i)=>{
@@ -1830,15 +1921,41 @@ $("#saveSet").onclick=()=>{ S.name=$("#setName").value.trim(); S.settings.len=+$
 $("#testVoice").onclick=()=>{
   const n=$("#voiceNote");
   n.style.display="block";
-  if(!window.speechSynthesis){
-    n.innerHTML="Trình duyệt này không có giọng đọc. Bố mẹ mở app bằng <b>Chrome</b> (Android) hoặc <b>Safari</b> (iPhone) giúp con nhé.";
-    return;
-  }
   if(!S.sound){
     n.innerHTML="Âm thanh trong app đang <b>TẮT</b>. Bố mẹ bấm biểu tượng 🔇 trên thanh đầu để bật lại.";
     return;
   }
-  n.innerHTML="Đang đọc thử… bố mẹ nghe câu <b>“Hello, I am your English friend.”</b>";
+  /* Ưu tiên thử bản thu sẵn — đây mới là giọng con nghe hằng ngày */
+  const cauThu = ["hello","book","teacher"].find(t=>AUDIO.co(t))
+              || Object.keys(AUDIO.map)[0];
+  if(cauThu){
+    unlockAudio();
+    n.innerHTML="Đang phát giọng thu sẵn… bố mẹ nghe từ <b>“"+esc(cauThu)+"”</b>";
+    let nghe=false;
+    if(AUDIO.phat(cauThu, 1, ()=>{ nghe=true; })){
+      setTimeout(()=>{
+        n.innerHTML = nghe
+          ? "✅ <b>Giọng thu sẵn đang hoạt động.</b> Máy của mình phát được đúng giọng đọc trong app — "
+            + "con nghe bài nào cũng rõ. Nếu vẫn không nghe thấy, bố mẹ kiểm tra <b>nút gạt im lặng</b> "
+            + "bên hông máy và <b>vặn to âm lượng media</b> khi app đang phát."
+          : "⚠️ Máy nhận lệnh nhưng chưa ra tiếng. Bố mẹ thử: <b>1)</b> tắt chế độ im lặng · "
+            + "<b>2)</b> vặn to âm lượng media · <b>3)</b> chạm vào màn hình một cái rồi bấm lại nút này "
+            + "(một số máy chỉ cho phát tiếng sau khi người dùng chạm).";
+      }, 2200);
+      return;
+    }
+  }
+  /* Chưa tải xong gói giọng thì thử bộ đọc của máy */
+  if(AUDIO.dangBan()){
+    n.innerHTML="⏳ Đang tải giọng đọc cho lớp của con. Bố mẹ chờ vài giây rồi bấm lại nút này nhé.";
+    return;
+  }
+  if(!window.speechSynthesis){
+    n.innerHTML="Chưa tải được giọng thu sẵn và trình duyệt này cũng không có giọng đọc. "
+      + "Bố mẹ kiểm tra mạng, hoặc mở app bằng <b>Chrome</b> (Android) / <b>Safari</b> (iPhone) giúp con nhé.";
+    return;
+  }
+  n.innerHTML="Chưa tải được giọng thu sẵn, đang nhờ máy đọc thử câu <b>“Hello, I am your English friend.”</b>";
   S.settings.voice=$("#setVoice").value; save();
   TTS_OK=null;
   speak("Hello, I am your English friend.", .9);
@@ -1974,6 +2091,8 @@ $$(".bottomnav button").forEach(b=>b.onclick=()=>{
 /* khởi động */
 $("#btnSound").textContent = S.sound?"🔊":"🔇";
 buildPool();
+/* nạp sẵn giọng đọc của lớp đang học — bé quay lại app là nghe được ngay */
+AUDIO.tai(GRADE); AUDIO.tai("ext");
 renderHome(); renderUnits(); show("scHome");
 window.__APP={G1,G2,G3,G4,G5,BOOK,GEN,TRANS,setGrade,buildQuestions,vnSay,intoOf,
   weakUnit,blockUnit,weakWordList,openUnitObj,buildReport,advUnit,extPool,ADV_MODES,
