@@ -1559,7 +1559,7 @@ async function sendToSupabase(f){
     const r = await fetch(HNA_SB.url,{ method:"POST",
       headers:{ apikey:HNA_SB.key, Authorization:"Bearer "+HNA_SB.key,
                 "Content-Type":"application/json", Prefer:"return=minimal" },
-      body: JSON.stringify({ ho_ten_be:f.name, sdt_me:f.phone, email:f.email,
+      body: JSON.stringify({ ten_goi:f.name, sdt_me:f.phone, email:f.email,
         lop:+f.grade, khu_vuc:f.area, thiet_bi:(navigator.userAgent||"").slice(0,200),
         nguon:"app", app:APP_CODE })
     });
@@ -1672,7 +1672,7 @@ function saveLogin(){
   const bad=[];
   $$("#loginModal .bad").forEach(el=>el.classList.remove("bad"));
   const mark=(id,msg)=>{ $(id).classList.add("bad"); bad.push(msg); };
-  if(f.name.length<2)            mark("#liName","họ tên của bé");
+  if(f.name.length<2)            mark("#liName","tên gọi của bé");
   if(!VN_PHONE.test(f.phone))    mark("#liPhone","số điện thoại (10–11 số, bắt đầu bằng 0)");
   if(!f.email)                   mark("#liMail","email của bố mẹ");
   else if(!MAIL_RE.test(f.email)) mark("#liMail","email chưa đúng định dạng");
