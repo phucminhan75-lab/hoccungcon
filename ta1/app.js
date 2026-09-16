@@ -1560,7 +1560,7 @@ async function sendToSupabase(f){
       headers:{ apikey:HNA_SB.key, Authorization:"Bearer "+HNA_SB.key,
                 "Content-Type":"application/json", Prefer:"return=minimal" },
       body: JSON.stringify({ ten_goi:f.name, sdt_me:f.phone, email:f.email,
-        lop:+f.grade, khu_vuc:f.area, thiet_bi:(navigator.userAgent||"").slice(0,200),
+        lop:+f.grade, khu_vuc:f.area,
         nguon:"app", app:APP_CODE })
     });
     return r.ok;
