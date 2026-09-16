@@ -1986,12 +1986,13 @@ $("#testGas").onclick=()=>{ if(!$("#gasUrl").value.trim()){alert("Bố mẹ hãy
   syncGAS({unit:0,unitTitle:"TEST",mode:"test",pct:100,score:0,correct:0,total:0,wrong:""});
   alert("Đã gửi thử. Bố mẹ mở Google Sheet để kiểm tra dòng mới nhé."); };
 $("#exportJson").onclick=()=>{
-  const blob=new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
+  const learningData={grade:S.grade,sound:S.sound,settings:S.settings,progress:S.progress,stickers:S.stickers};
+  const blob=new Blob([JSON.stringify(learningData,null,2)],{type:"application/json"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-  a.download="alpha-english-kids-"+(S.name||"bé")+".json"; a.click();
+  a.download="alpha-english-kids-learning-data.json"; a.click();
 };
-$("#resetAll").onclick=()=>{ if(confirm("Xoá toàn bộ tiến độ và huy hiệu trên máy này?")){
-  S=JSON.parse(JSON.stringify(DEF)); save(); renderParent(); renderHome(); alert("Đã xoá xong."); } };
+  $("#resetAll").onclick=()=>{ if(confirm("Xoá toàn bộ tiến độ và huy hiệu trên máy này?")){
+S=JSON.parse(JSON.stringify(DEF)); save(); renderParent(); renderHome(); alert("Đã xoá xong."); } };
 /* ---------- Cộng đồng & Gieo hạt ---------- */
 const SEED_INFO = {
   sq_20 :{ten:"20.000đ"},  sq_50 :{ten:"50.000đ"},
