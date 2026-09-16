@@ -1901,7 +1901,17 @@ $("#nextBtn").onclick=()=>{ qi++; nextQ(); };
 $("#againBtn").onclick=()=>startSession(MODE);
 $("#toUnitsBtn").onclick=()=>{ if(CUR && CUR.adv){ renderAdv(); show("scAdv"); } else { renderUnits(); show("scUnits"); } };
 $("#nextUnitBtn").onclick=()=>{ const nx=findU(CUR.n+1); if(!nx){ renderUnits(); show("scUnits"); return; } openUnit(nx.n); };
+let parentSettingsUnlocked=false;
+function unlockParentSettings(){
+  if(parentSettingsUnlocked) return true;
+  const a=4+rnd(6), b=3+rnd(7);
+  const ans=prompt("Dành cho bố mẹ: "+a+" + "+b+" = ?");
+  if(ans===null) return false;
+  if(+ans!==a+b){ alert("Chưa đúng. Cài đặt vẫn được khóa."); return false; }
+  parentSettingsUnlocked=true; return true;
+}
 $$(".ptab").forEach(t=>t.onclick=()=>{
+  if(t.dataset.ptab==="set" && !unlockParentSettings()) return;
   $$(".ptab").forEach(x=>x.classList.remove("on")); t.classList.add("on");
   ["rep","ask","set"].forEach(k=>$("#p"+cap(k)).classList.toggle("hide", k!==t.dataset.ptab));
 });
