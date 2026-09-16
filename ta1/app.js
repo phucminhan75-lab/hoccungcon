@@ -1700,9 +1700,7 @@ function saveLogin(){
     sendToForm(f);
     sendToSupabase(f).then(ok=>{ if(!ok) queuePush(f); });
   }
-  syncGAS({kind: isNew ? "dangky" : "capnhat", type:"nguoidung",
-    hoTenBe:f.name, sdtMe:f.phone, email:f.email, lop:f.grade, khuVuc:f.area,
-    device:(navigator.userAgent||"").slice(0,120)});
+  
   loginLabel();
   GATE=false; document.body.classList.remove("gated");
   $("#loginModal").classList.add("hide");
